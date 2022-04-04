@@ -21,8 +21,8 @@ stages:
             inputs:
               filePath: ./build.ps1
               arguments: publish
-          # - task: Bash@3
-          #   displayName: NUKE publish
-          #   inputs:
-          #     filePath: ./build.sh
-          #     arguments: publish
+          - task: PublishPipelineArtifact@1
+            displayName: Publish artifacts
+            inputs:
+              targetPath: artifacts
+              artifactName: buildpacks
