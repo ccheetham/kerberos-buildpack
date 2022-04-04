@@ -19,9 +19,7 @@ stages:
             displayName: 'precreate build directories'
             inputs:
               script: 'mkdir artifacts'
-          - task: ShellScript@2
+          - task: CmdLine@2
             displayName: 'NUKE publish'
             inputs:
-              scriptPath: ./build.ps1
-              args: >
-                publish
+              script: './build.ps1 publish'
