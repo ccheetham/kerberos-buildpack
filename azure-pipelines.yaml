@@ -16,15 +16,6 @@ stages:
             inputs:
               packageType: sdk
               version: 6.0.x
-          # - task: CmdLine@2
-          #   displayName: Precreate build directories
-          #   inputs:
-          #     script: mkdir artifacts
-          - task: Bash@3
-            displayName: Precreate build directories
-            inputs:
-              targetType: inline
-              script: mkdir artifacts
           # - task: PowerShell@2
           #   displayName: NUKE publish
           #   inputs:
