@@ -11,12 +11,12 @@ stages:
           vmImage: windows-latest
         steps:
           - task: UseDotNet@2
-            displayName: 'install .NET Core SDK 6.0'
+            displayName: 'Install .NET Core SDK 6.0'
             inputs:
               packageType: sdk
               version: 6.0.x
           - task: CmdLine@2
-            displayName: 'precreate build directories'
+            displayName: 'Precreate build directories'
             inputs:
               script: 'mkdir artifacts'
           - task: CmdLine@2
