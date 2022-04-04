@@ -19,7 +19,7 @@ stages:
             displayName: 'Precreate build directories'
             inputs:
               script: 'mkdir artifacts'
-          - task: CmdLine@2
+          - task: PowerShell@2
             displayName: 'NUKE publish'
             inputs:
               script: './build.ps1 publish'
