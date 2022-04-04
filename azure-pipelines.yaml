@@ -11,15 +11,16 @@ stages:
           vmImage: windows-latest
         steps:
           - task: UseDotNet@2
-            displayName: 'Install .NET Core SDK 6.0'
+            displayName: Install .NET Core SDK 6.0
             inputs:
               packageType: sdk
               version: 6.0.x
           - task: CmdLine@2
-            displayName: 'Precreate build directories'
+            displayName: Precreate build directories
             inputs:
-              script: 'mkdir artifacts'
+              script: mkdir artifacts
           - task: PowerShell@2
-            displayName: 'NUKE publish'
+            displayName: NUKE publish
             inputs:
-              script: './build.ps1 publish'
+              filePath: ./build.ps1
+              arguments: publish
