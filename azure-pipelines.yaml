@@ -8,16 +8,20 @@ stages:
       - job: build
         displayName: Build
         pool:
-          vmImage: ubuntu-latest
+          vmImage: windows-latest
         steps:
           - task: UseDotNet@2
             displayName: 'Install .NET Core SDK 6.0'
             inputs:
               packageType: sdk
               version: 6.0.x
+          - task: CmdLine@2
+            displayName: 'precreate build directories'
+            inputs:
+              script: 'mkdir artifacts'
           - task: ShellScript@2
             displayName: 'NUKE Publish'
             inputs:
-              scriptPath: ./build.sh
+              scriptPath:
               args: >
                 publish
