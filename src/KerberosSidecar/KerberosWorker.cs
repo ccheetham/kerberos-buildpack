@@ -17,8 +17,8 @@ public class KerberosWorker : BackgroundService
     private readonly CancellationToken _cancellationToken;
 
     public KerberosWorker(
-        IOptionsMonitor<KerberosOptions> options, 
-        KerberosCredentialFactory credentialFactory, 
+        IOptionsMonitor<KerberosOptions> options,
+        KerberosCredentialFactory credentialFactory,
         SpnProvider spnProvider,
         TgtHealthCheck tgtHealthCheck,
         IHostApplicationLifetime lifetime,
@@ -81,7 +81,19 @@ public class KerberosWorker : BackgroundService
     {
         if (_options.CurrentValue.GenerateKrb5)
         {
-            await File.WriteAllTextAsync(_options.CurrentValue.Kerb5ConfigFile, _options.CurrentValue.KerberosClient.Configuration.Serialize(), _cancellationToken);
+            var kerbOpts = _options.CurrentValue;
+            _logger.LogInformation($"kerberos options: {kerbOpts}");
+            var kerbConfigFile = kerbOpts.Kerb5ConfigFile;
+            _logger.LogInformation($"kerberos config file: {kerbConfigFile}");
+            var kerbClient = kerbOpts.KerberosClient;
+            _logger.LogInformation($"kerberos client: {kerbClient}");
+            var kerbConfig = kerbClient.Configuration;
+            _logger.LogInformation($"kerberos config: {kerbConfig}");
+            var kerbConfigSer = kerbConfig.Serialize();
+            _logger.LogInformation($"kerberos config ser byte cout: {kerbConfigSer.Length}");
+
+            await File.WriteAllTextAsync(kerbConfigFile, kerbConfigSer, _cancellationToken);
+            // await File.WriteAllTextAsync(_options.CurrentValue.Kerb5ConfigFile, _options.CurrentValue.KerberosClient.Configuration.Serialize(), _cancellationToken);
         }
     }
 
@@ -108,7 +120,7 @@ public class KerberosWorker : BackgroundService
             {
                 await _options.CurrentValue.KerberosClient.RenewTicket();
             }
-            
+
             if (initial)
             {
                 _logger.LogInformation("Service authenticated successfully as '{Principal}'", credentials.UserName);
@@ -119,7 +131,7 @@ public class KerberosWorker : BackgroundService
             }
 
             _tgtHealthCheck.LastException = null;
-            
+
         }
         catch (Exception e)
         {
@@ -140,7 +152,7 @@ public class KerberosWorker : BackgroundService
     {
         var credentials = await _credentialFactory.Get(_options.CurrentValue, _cancellationToken);
         var spns = await _spnProvider.GetSpnsForAppRoutes(_cancellationToken);
-        
+
         var realm = credentials.Domain;
         List<KerberosKey> kerberosKeys = new();
         foreach (var spn in spns)
@@ -170,5 +182,5 @@ public class KerberosWorker : BackgroundService
             await Task.Delay(1000, stoppingToken);
         }
     }
-    
+
 }
