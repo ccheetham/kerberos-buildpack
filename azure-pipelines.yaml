@@ -8,8 +8,7 @@ stages:
       - job: build
         displayName: Build
         pool:
-          vmImage: windows-latest
-          # vmImage: ubuntu-latest
+          vmImage: ubuntu-latest
         steps:
           - task: UseDotNet@2
             displayName: Install .NET Core SDK 6.0
