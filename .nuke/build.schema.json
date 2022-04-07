@@ -78,7 +78,6 @@
               "Clean",
               "Detect",
               "Publish",
-              "PublishSample",
               "Release",
               "Restore",
               "Supply"
@@ -98,7 +97,6 @@
               "Clean",
               "Detect",
               "Publish",
-              "PublishSample",
               "Release",
               "Restore",
               "Supply"

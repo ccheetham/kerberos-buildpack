@@ -63,7 +63,6 @@ class Build : NukeBuild
 
     [Solution] readonly Solution Solution;
     string PackageZipName => $"{BuildpackProjectName}-{Runtime}-{ReleaseName}.zip";
-    string SampleZipName => $"sampleapp-{Runtime}-{ReleaseName}.zip";
     [NerdbankGitVersioning(UpdateBuildNumber = true)] readonly NerdbankGitVersioning GitVersion;
     public string ReleaseName => IsCurrentBranchCommitted() ? $"v{GitVersion.NuGetPackageVersion}" : "WIP";
 
@@ -86,15 +85,14 @@ class Build : NukeBuild
         .Description("Cleans up **/bin and **/obj folders")
         .Executes(() =>
         {
-            (RootDirectory / "sample").GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
             SourceDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
             TestsDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
         });
 
     Target Publish => _ => _
         .Description("Packages buildpack in Cloud Foundry expected format into /artifacts directory")
+        .DependsOn(Restore)
         .After(Clean)
-        .DependsOn(PublishSample, Restore)
         .Executes(() =>
         {
             var workDirectory = TemporaryDirectory / "pack";
@@ -148,25 +146,6 @@ class Build : NukeBuild
                 .SetProjectFile(Solution));
         });
 
-    Target PublishSample => _ => _
-        .DependsOn(Restore)
-        .Executes(() =>
-        {
-            EnsureExistingDirectory(ArtifactsDirectory);
-            var demoProjectDirectory = RootDirectory / "sample" / "KerberosDemo";
-            DotNetPublish(c => c
-                .SetProject(demoProjectDirectory / "KerberosDemo.csproj")
-                .SetConfiguration("Debug"));
-            var publishFolder = demoProjectDirectory / "bin" / "Debug" / "net6.0" / "publish";
-            var manifestFile = publishFolder / "manifest.yml";
-            var manifest = File.ReadAllText(manifestFile);
-            manifest = manifest.ReplaceRegex(@"\r?\n\s*path:.+", match => match.Result(""));
-            File.WriteAllText(manifestFile, manifest);
-            var artifactZip = ArtifactsDirectory / $"sampleapp-{Runtime}-{ReleaseName}.zip";
-            DeleteFile(artifactZip);
-            ZipFile.CreateFromDirectory(publishFolder, artifactZip, CompressionLevel.NoCompression, false);
-        });
-
     Target Release => _ => _
         .Description("Creates a GitHub release (or amends existing) and uploads buildpack artifact")
         .DependsOn(Publish)
@@ -200,7 +179,7 @@ class Build : NukeBuild
                 release = await client.Repository.Release.Create(owner, repoName, newRelease);
             }
 
-            var artifactsToRelease = new[] { PackageZipName, SampleZipName }.ToHashSet();
+            var artifactsToRelease = new[] { PackageZipName }.ToHashSet();
 
             foreach (var existingAsset in release.Assets.Where(x => artifactsToRelease.Contains(x.Name)))
             {
