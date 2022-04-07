@@ -54,21 +54,21 @@ class Build : NukeBuild
     readonly string Configuration = "Debug";
     readonly string Runtime = "linux-x64";
     readonly string Framework = "net6.0";
-    
+
     [Parameter("GitHub personal access token with access to the repo")]
     string GitHubToken;
 
     [Parameter("Application directory against which buildpack will be applied")]
     readonly string ApplicationDirectory;
-    
+
     [Solution] readonly Solution Solution;
     string PackageZipName => $"{BuildpackProjectName}-{Runtime}-{ReleaseName}.zip";
     string SampleZipName => $"sampleapp-{Runtime}-{ReleaseName}.zip";
     [NerdbankGitVersioning(UpdateBuildNumber = true)] readonly NerdbankGitVersioning GitVersion;
     public string ReleaseName => IsCurrentBranchCommitted() ? $"v{GitVersion.NuGetPackageVersion}" : "WIP";
-    
+
     public AbsolutePath GetPublishDirectory(Nuke.Common.ProjectModel.Project project) => project.Directory / "bin" / Configuration / Framework / Runtime / "publish";
-    public bool IsGitHubRepository 
+    public bool IsGitHubRepository
         => GitRepository.Network.Remotes
             .Where(x => x.Name == "origin")
             .Select(x => x.Url.Contains("github.com"))
@@ -79,7 +79,7 @@ class Build : NukeBuild
     AbsolutePath SourceDirectory => RootDirectory / "src";
     AbsolutePath TestsDirectory => RootDirectory / "tests";
     AbsolutePath ArtifactsDirectory => RootDirectory / "artifacts";
-    
+
     string[] LifecycleHooks = {"detect", "supply", "release", "finalize"};
 
     Target Clean => _ => _
@@ -90,7 +90,7 @@ class Build : NukeBuild
             SourceDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
             TestsDirectory.GlobDirectories("**/bin", "**/obj").ForEach(DeleteDirectory);
         });
-    
+
     Target Publish => _ => _
         .Description("Packages buildpack in Cloud Foundry expected format into /artifacts directory")
         .After(Clean)
@@ -118,7 +118,7 @@ class Build : NukeBuild
                 .SetFileVersion(GitVersion.AssemblyFileVersion)
                 .SetInformationalVersion(GitVersion.AssemblyInformationalVersion)
             );
-            
+
             var lifecycleBinaries = Solution.GetProjects("Lifecycle*")
                 .Select(x => x.Directory / "bin" / Configuration / Framework / Runtime / "publish")
                 .SelectMany(x => Directory.GetFiles(x).Where(path => LifecycleHooks.Any(hook => Path.GetFileName(path).StartsWith(hook))));
@@ -129,10 +129,10 @@ class Build : NukeBuild
             }
 
             CopyDirectoryRecursively(buildpackPublishDirectory, workBinDirectory, DirectoryExistsPolicy.Merge);
-            
+
             CopyDirectoryRecursively(sidecarPublishDirectory, workDeps / "sidecar" , DirectoryExistsPolicy.Merge);
 
-            
+
             var tempZipFile = TemporaryDirectory / PackageZipName;
 
             ZipFile.CreateFromDirectory(workDirectory, tempZipFile, CompressionLevel.NoCompression, false);
@@ -156,7 +156,7 @@ class Build : NukeBuild
             var demoProjectDirectory = RootDirectory / "sample" / "KerberosDemo";
             DotNetPublish(c => c
                 .SetProject(demoProjectDirectory / "KerberosDemo.csproj")
-                .SetConfiguration("DEBUG"));
+                .SetConfiguration("Debug"));
             var publishFolder = demoProjectDirectory / "bin" / "Debug" / "net6.0" / "publish";
             var manifestFile = publishFolder / "manifest.yml";
             var manifest = File.ReadAllText(manifestFile);
@@ -166,7 +166,7 @@ class Build : NukeBuild
             DeleteFile(artifactZip);
             ZipFile.CreateFromDirectory(publishFolder, artifactZip, CompressionLevel.NoCompression, false);
         });
-    
+
     Target Release => _ => _
         .Description("Creates a GitHub release (or amends existing) and uploads buildpack artifact")
         .DependsOn(Publish)
@@ -179,11 +179,11 @@ class Build : NukeBuild
                 Credentials = new Credentials(GitHubToken, AuthenticationType.Bearer)
             };
             var pushUrl = new Uri(GitRepository.Network.Remotes.Where(x => x.Name == "origin").Select(x => x.Url.TrimEnd(".git")).First());
-            
+
             var owner = pushUrl.Segments[1].Trim('/');
             var repoName = pushUrl.Segments[2].Trim('/');
 
-            
+
             Release release;
             try
             {
@@ -220,7 +220,7 @@ class Build : NukeBuild
 
             Serilog.Log.Information(string.Join("\n", downloadLinks));
         });
-    
+
     Target Detect => _ => _
         .Description("Invokes buildpack 'detect' lifecycle event")
         .Requires(() => ApplicationDirectory)
@@ -270,16 +270,16 @@ class Build : NukeBuild
         {
             output.SetLevel(9);
             ZipEntry entry;
-		
+
             while ((entry = input.GetNextEntry()) != null)
             {
                 var outEntry = new ZipEntry(entry.Name) {HostSystem = (int) HostSystemID.Unix};
-                var entryAttributes =  
-                    ZipEntryAttributes.ReadOwner | 
-                    ZipEntryAttributes.ReadOther | 
+                var entryAttributes =
+                    ZipEntryAttributes.ReadOwner |
+                    ZipEntryAttributes.ReadOther |
                     ZipEntryAttributes.ReadGroup |
-                    ZipEntryAttributes.ExecuteOwner | 
-                    ZipEntryAttributes.ExecuteOther | 
+                    ZipEntryAttributes.ExecuteOwner |
+                    ZipEntryAttributes.ExecuteOther |
                     ZipEntryAttributes.ExecuteGroup;
                 entryAttributes = entryAttributes | (entry.IsDirectory ? ZipEntryAttributes.Directory : ZipEntryAttributes.Regular);
                 outEntry.ExternalFileAttributes = (int) (entryAttributes) << 16; // https://unix.stackexchange.com/questions/14705/the-zip-formats-external-file-attribute
@@ -293,14 +293,14 @@ class Build : NukeBuild
         DeleteFile(zipFile);
         RenameFile(tmpFileName,zipFile, FileExistsPolicy.Overwrite);
     }
-    
+
     [Flags]
     enum ZipEntryAttributes
     {
         ExecuteOther = 1,
         WriteOther = 2,
         ReadOther = 4,
-	
+
         ExecuteGroup = 8,
         WriteGroup = 16,
         ReadGroup = 32,
@@ -321,7 +321,7 @@ class Build : NukeBuild
         Regular = 32768,
         SymbolicLink = 40960,
         Socket = 49152
-	
+
     }
     class PublishTarget
     {
