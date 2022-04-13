@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Nuke.Common;
 using static Nuke.Common.Tools.CloudFoundry.CloudFoundryTasks;
@@ -35,7 +35,7 @@ partial class Build
     [Parameter("User current cf target (org/space)")]
     readonly bool UseCurrentCfTarget;
     readonly string TestAppName = "KerberosDemo";
-    
+
     Target CfLogin => _ => _
         .Requires(() => CfUsername, () => CfPassword, () => CfApiEndpoint)
         .OnlyWhenStatic(() => !UseCurrentCfLogin)
@@ -89,64 +89,4 @@ partial class Build
             }
         });
 
-
-    Target DeploySampleApp => _ => _
-        .DependsOn(SetCfTargetSpace, EnsureCfTarget)
-        .After(InstallBuildpack)
-        .Requires(
-            () => IntegrationTestKerbKdc, 
-            () => IntegrationTestKerbUser, 
-            () => IntegrationTestKerbPassword, 
-            () => IntegrationTestSqlConnectionString)
-        .Executes(() =>
-        {
-            CloudFoundryCreateApp(c => c
-                .SetName(TestAppName));
-            CloudFoundrySetEnv(c => c
-                .SetAppName(TestAppName)
-                .CombineWith(new Dictionary<string,string>()
-                {
-                    {"KRB_KDC", IntegrationTestKerbKdc},
-                    {"KRB_SERVICE_ACCOUNT", IntegrationTestKerbUser},
-                    {"KRB_PASSWORD", IntegrationTestKerbPassword},
-                    {"ConnectionStrings__SqlServer", IntegrationTestSqlConnectionString},
-                }, (oo, env) =>
-                {
-                    
-                    return oo
-                        .SetEnvVarName(env.Key)
-                        .SetEnvVarValue(env.Value);
-                }));
-            CloudFoundryPush(c => c
-                .SetAppName(TestAppName)
-                .SetPath(ArtifactsDirectory / SampleZipName)
-                .SetBuildpack(TestBuildpackName, "dotnet_core_buildpack")
-                .SetHealthCheckType(HealthCheckType.Port)
-                .SetMemory("512M")
-                .EnableRandomRoute());
-        });
-    Target Test => _ => _
-        .DependsOn(EnsureCfTarget)
-        .After(Publish)
-        .After(InstallBuildpack)
-        .After(DeploySampleApp)
-        .Executes(() =>
-        {
-            
-            var appId = CloudFoundry($"app {TestAppName} --guid").First().Text;
-            var routesJson = CloudFoundryCurl(c => c
-                .SetPath($"/v3/apps/{appId}/routes")
-                .DisableProcessLogOutput())
-                .StdToJson();
-            var appUrl = routesJson.SelectToken("$..url").Value<string>();
-            appUrl = $"https://{appUrl}";
-            DotNetTest(c => c
-                .SetProjectFile(Solution.GetProject("KerberosBuildpack.Tests").Path)
-                .AddProcessEnvironmentVariable("SampleAppUrl", appUrl)
-            );
-
-        });
-
-    Target TestFull => _ => _
-        .DependsOn(Publish, InstallBuildpack, DeploySampleApp, Test);
 }
