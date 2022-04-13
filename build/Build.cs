@@ -147,28 +147,6 @@ partial class Build : NukeBuild
                 .SetProjectFile(Solution));
         });
 
-<<<<<<< HEAD
-=======
-    Target PublishSample => _ => _
-        .DependsOn(Restore)
-        .Executes(() =>
-        {
-            EnsureExistingDirectory(ArtifactsDirectory);
-            var demoProjectDirectory = RootDirectory / "sample" / "KerberosDemo";
-            DotNetPublish(c => c
-                .SetProject(demoProjectDirectory / "KerberosDemo.csproj")
-                .SetConfiguration(Configuration));
-            var publishFolder = demoProjectDirectory / "bin" / Configuration / "net6.0" / "publish";
-            var manifestFile = publishFolder / "manifest.yml";
-            var manifest = File.ReadAllText(manifestFile);
-            manifest = manifest.ReplaceRegex(@"\r?\n\s*path:.+", match => match.Result(""));
-            File.WriteAllText(manifestFile, manifest);
-            var artifactZip = ArtifactsDirectory / SampleZipName;
-            DeleteFile(artifactZip);
-            ZipFile.CreateFromDirectory(publishFolder, artifactZip, CompressionLevel.NoCompression, false);
-        });
-
->>>>>>> upstream/main
     Target Release => _ => _
         .Description("Creates a GitHub release (or amends existing) and uploads buildpack artifact")
         .DependsOn(Publish)
@@ -223,11 +201,6 @@ partial class Build : NukeBuild
             Serilog.Log.Information(string.Join("\n", downloadLinks));
         });
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> upstream/main
     Target Detect => _ => _
         .Description("Invokes buildpack 'detect' lifecycle event")
         .Requires(() => ApplicationDirectory)
