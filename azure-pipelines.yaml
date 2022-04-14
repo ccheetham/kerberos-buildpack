@@ -1,0 +1,27 @@
+trigger:
+  - upstream
+
+stages:
+  - stage: assemble
+    displayName: Assemble
+    jobs:
+      - job: build
+        displayName: Build
+        pool:
+          vmImage: ubuntu-latest
+        steps:
+          - task: UseDotNet@2
+            displayName: Install .NET Core SDK 6.0
+            inputs:
+              packageType: sdk
+              version: 6.0.x
+          - task: PowerShell@2
+            displayName: NUKE publish
+            inputs:
+              filePath: ./build.ps1
+              arguments: publish
+          - task: PublishPipelineArtifact@1
+            displayName: Publish artifacts
+            inputs:
+              targetPath: artifacts
+              artifactName: buildpacks
