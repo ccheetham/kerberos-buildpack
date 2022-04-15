@@ -71,7 +71,7 @@ partial class Build : NukeBuild
     readonly string Configuration = "Debug";
     readonly string Runtime = "linux-x64";
     readonly string Framework = "net6.0";
-    readonly string BuildpackArtifactName = "dotnet-kerberos-buildpack";
+    readonly string BuildpackArtifactName = "dotnet_kerberos_buildpack";
     readonly string BuildpackStackName = "cflinuxfs3";
 
 
