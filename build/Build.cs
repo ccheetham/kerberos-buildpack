@@ -69,9 +69,10 @@ partial class Build : NukeBuild
     [GitRepositoryExt] LibGit2Sharp.Repository GitRepository;
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly string Configuration = "Debug";
-    readonly string BuildpackArtifactName = "dotnet-kerberos-buildpack";
     readonly string Runtime = "linux-x64";
     readonly string Framework = "net6.0";
+    readonly string BuildpackArtifactName = "dotnet-kerberos-buildpack";
+    readonly string BuildpackStackName = "cflinuxfs3";
 
 
 
@@ -84,7 +85,7 @@ partial class Build : NukeBuild
 
     [Solution] readonly Solution Solution;
     string BuildpackSolution => RootDirectory / "src"  / "KerberosBuildpack.sln";
-    string PackageZipName => $"{BuildpackArtifactName}-{Runtime}-{ReleaseName}.zip";
+    string PackageZipName => $"{BuildpackArtifactName}-{BuildpackStackName}-{ReleaseName}.zip";
     string SampleZipName => $"sampleapp-{Runtime}-{ReleaseName}.zip";
     [NerdbankGitVersioning(UpdateBuildNumber = true)] readonly NerdbankGitVersioning GitVersion;
     // public string ReleaseName => IsCurrentBranchCommitted() ? $"v{GitVersion.NuGetPackageVersion}" : "WIP";
