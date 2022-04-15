@@ -4,8 +4,8 @@ applications:
   path: bin/Debug/net6.0/publish
   memory: 512M
   health-check-type: port
-  buildpacks: 
-    - https://github.com/macsux/kerberos-buildpack/releases/download/v1.0.16/KerberosBuildpack-linux-x64-v1.0.16.zip
+  buildpacks:
+    - kerberos-alpha
     - dotnet_core_buildpack
   env:
     KRB_KDC: dc1.macsux.com
